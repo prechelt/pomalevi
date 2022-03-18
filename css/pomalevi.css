@@ -1,0 +1,42 @@
+body {
+    font-family: sans-serif;
+    margin-left: 3em;
+}
+
+.pmlv-button {
+    padding: 1ex;
+}
+
+.pmlv-footer {
+    font-size: 70%;
+    color: #999;
+}
+
+.pmlv-numcell {
+    font-size: 200%;
+}
+
+.pmlv-table {
+    
+}
+
+.pmlv-tablerow {
+    
+}
+
+.pmlv-tablerow:hover {
+    background-color: #ddd;
+}
+
+.pmlv-title {
+    font-size: 250%   
+}
+
+.pmlv-toccell {
+    padding-left: 2em;
+}
+
+.pmlv-video {
+    border: 1px solid;
+}
+
