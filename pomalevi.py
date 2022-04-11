@@ -46,7 +46,11 @@ def doitall():
         os.remove(stoplogofile)
     else:
         stoptimes = [[] for _ in range(numvideos)]
-    title, toc = read_toc(args.toc, numvideos)
+    if args.toc:
+        title, toc = read_toc(args.toc, numvideos)
+    else:
+        basename = os.path.splitext(os.path.basename(args.inputfile))[0]
+        title, toc = (basename, [f"part {i+1}" for i in range(numvideos)])
     generate_html(title, stoptimes, toc, args.outputdir)
     print("DONE.")
 
@@ -310,7 +314,7 @@ html_template = """
 
     <footer class="pmlv-footer">
       <p>Generated %(date)s 
-         by <a href="github.com/prechelt/pomalevi">pomalevi</a>:
+         by <a href="https://github.com/prechelt/pomalevi">pomalevi</a>:
          crude, but effective.
       </p>
     </footer>
