@@ -51,7 +51,7 @@ def doitall():
     else:
         basename = os.path.splitext(os.path.basename(args.inputfile))[0]
         title, toc = (basename, [f"part {i+1}" for i in range(numvideos)])
-    generate_html(title, stoptimes, toc, args.outputdir)
+    generate_html(title, args.cssfile, args.cssurl, stoptimes, toc, args.outputdir)
     print("DONE.")
 
 
@@ -62,7 +62,11 @@ def parse_args():
     parser.add_argument('--wait', action='store_true',
                         help='wait for inputfile export to finish (filesize change)')
     parser.add_argument('-v', '--verbose', action='store_true',
-                        help='show the ffmpeg commands run)')
+                        help='show the ffmpeg commands as they are run')
+    parser.add_argument('--cssfile', type=str, metavar='path/mycss.css',
+                        help='CSS file to be copied to outputdir')
+    parser.add_argument('--cssurl', type=str, metavar='http://.../mycss.css or mycss.css',
+                        help='relative or absolute URL to CSS')
     parser.add_argument('--split-at', type=str, metavar='ur:splitlogo.png',
                         help='split when splitlogo appears in upper right corner (or ul, lr, ll)')
     parser.add_argument('--stop-at', type=str, metavar='ur:stoplogo.png',
@@ -81,6 +85,8 @@ def parse_args():
     #----- manually check for further problems:
     if not Path(args.inputfile).exists():
         parser.error(f"file {args.inputfile} must be readable")
+    if args.cssfile and not Path(args.cssfile).exists():
+        parser.error(f"file {args.cssfile} must be readable")
     # we do not check that args.outputdir is a writable directory or nonexisting
     if args.split_at:
         args.splitlogo, args.splitlogoregion = parse_logo_info(
@@ -279,9 +285,8 @@ html_template = """
 <html>
   <head>
     <title>%(title)s</title>
-    <link rel="stylesheet" href="../css/pomalevi.css">
     %(css_block)s
-    <link rel="icon" type="image/png" href="%(faviconfile)s">
+    <link rel="icon" type="image/png" href="%(favicon)s">
     <meta charset="UTF-8">
   </head>
   <body>
@@ -365,13 +370,28 @@ script_template = """
     </script>
 """
 
-def generate_html(title: str, stoptimes: Stoptimes, 
+def generate_html(title: str, 
+                  cssfile: tg.Optional[str], cssurl: tg.Optional[str],
+                  stoptimes: Stoptimes, 
                   toc: tg.List[str], outputdir: str):
     # https://html.spec.whatwg.org/multipage/media.html
     filename = f"{outputdir}/v.html"
     print(f"Generating {filename}")
-    css_block = ""  # TODO
-    faviconfile = f"{os.path.dirname(__file__)}/img/favicon.png"
+    favicon_srcfile = f"{os.path.dirname(__file__)}/img/favicon.png"
+    favicon_href = "favicon.png"
+    date = dt.datetime.now().strftime("%Y-%m-%d")
+    #----- prepare CSS block:
+    if cssfile is None and cssurl is None:  # copy pomalevi default CSS
+        css_srcfile = "%s/css/pomalevi.css" % os.path.dirname(__file__)
+        css_href = "pomalevi.css"
+    elif cssfile:  # copy given file
+        css_srcfile = cssfile
+        css_href = os.path.basename(cssfile)
+    elif cssurl:
+        css_srcfile = None
+        css_href = cssurl
+    css_block = f'    <link rel="stylesheet" href="{css_href}">'
+    #----- prepare TOC:
     toc_rows = ""
     script = script_template % dict(stoptimes=stoptimes)
     for i in range(1, len(stoptimes)+1):
@@ -382,12 +402,17 @@ def generate_html(title: str, stoptimes: Stoptimes,
                    f"<td class='pmlv-numcell'>{num_cell}</td>"
                    f"<td>{toc_cell}</td></tr>")
         toc_rows += toc_row
-    date = dt.datetime.now().strftime("%Y-%m-%d")
-    html = html_template % dict(title=title, faviconfile=faviconfile, css_block=css_block, 
+    #----- generate HTML:
+    html = html_template % dict(title=title, 
+                                favicon=favicon_href, 
+                                css_block=css_block, 
                                 toc_rows=toc_rows, date=date, script=script)
+    #----- fill outputdir:
     with open(filename, 'wt', encoding='utf8') as f:
         f.write(html)
-    shutil.copyfile(faviconfile, f"{outputdir}/favicon.png")
+    shutil.copyfile(favicon_srcfile, f"{outputdir}/{favicon_href}")
+    if css_srcfile:
+        shutil.copyfile(css_srcfile, f"{outputdir}/{css_href}")
 
 
 ########## helpers:
