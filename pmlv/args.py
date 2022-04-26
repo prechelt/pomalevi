@@ -13,8 +13,6 @@ def parse_args():
     #----- configure and use argparser:
     parser = argparse.ArgumentParser(
             description=description, epilog=projectsite)
-    parser.add_argument('--wait', action='store_true',
-                        help='wait for inputfile export to finish (filesize change)')
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='show the ffmpeg commands as they are run')
     parser.add_argument('--cssfile', type=str, metavar='path/mycss.css',

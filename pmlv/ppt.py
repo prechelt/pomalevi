@@ -4,7 +4,14 @@ import time
 
 
 def wait_for_powerpoint(videofile: str):
-    new_size = os.path.getsize(videofile)
+    """
+    While Powerpoint exports a video file, the file exists but has zero size.
+    Only once the export is complete will the contents be copied to the target.
+    """
+    new_size = os.path.getsize(videofile)  # will be zero during export
+    if new_size > 0:
+        return  # assume the file is ready and no waiting is needed
+        # risky if we get started near the end of the exporting
     print("waiting for filesize of '%s' to change" % videofile)
     while True:
         time.sleep(5.0)
