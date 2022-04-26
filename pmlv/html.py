@@ -7,14 +7,12 @@ import typing as tg
 from pmlv.base import Stoptimes
 
 
-def read_toc(tocfile: str, numvideos: int) -> tg.Tuple[str, tg.List[str]]:
-    with open(tocfile, 'rt') as f:
-        all = f.read()
-    items = all.split('\n\n')
-    title, items = items[0], items[1:]
-    if len(items) < numvideos:
-        items.extend((numvideos - len(items)) * [''])  # add items if too few
-    return title, items[:numvideos]
+def default_css_srcfile():
+    return "%s/../css/pomalevi.css" % os.path.dirname(__file__)
+
+
+def default_favicon_srcfile():
+    return f"{os.path.dirname(__file__)}/../img/favicon.png"
 
 
 html_template = """
@@ -108,6 +106,16 @@ script_template = """
 """
 
 
+def read_toc(tocfile: str, numvideos: int) -> tg.Tuple[str, tg.List[str]]:
+    with open(tocfile, 'rt') as f:
+        all = f.read()
+    items = all.split('\n\n')
+    title, items = items[0], items[1:]
+    if len(items) < numvideos:
+        items.extend((numvideos - len(items)) * [''])  # add items if too few
+    return title, items[:numvideos]
+
+
 def generate_html(title: str, 
                   cssfile: tg.Optional[str], cssurl: tg.Optional[str],
                   stoptimes: Stoptimes, 
@@ -115,12 +123,12 @@ def generate_html(title: str,
     # https://html.spec.whatwg.org/multipage/media.html
     filename = f"{outputdir}/index.html"
     print(f"Generating {filename}")
-    favicon_srcfile = f"{os.path.dirname(__file__)}/img/favicon.png"
+    favicon_srcfile = default_favicon_srcfile()
     favicon_href = "favicon.png"
     date = dt.datetime.now().strftime("%Y-%m-%d")
     #----- prepare CSS block:
     if cssfile is None and cssurl is None:  # copy pomalevi default CSS
-        css_srcfile = "%s/css/pomalevi.css" % os.path.dirname(__file__)
+        css_srcfile = default_css_srcfile()
         css_href = "pomalevi.css"
     elif cssfile:  # copy given file
         css_srcfile = cssfile
