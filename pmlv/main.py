@@ -12,8 +12,7 @@ from pmlv.ppt import wait_for_powerpoint
 
 def doitall():
     args = parse_args()
-    if args.wait:
-        wait_for_powerpoint(args.inputfile)
+    wait_for_powerpoint(args.inputfile)
     if not Path(args.outputdir).exists():
         os.mkdir(args.outputdir, mode=0o755)
     if hasattr(args, 'split_at'):
