@@ -1,4 +1,10 @@
-"""Knows how to call ffmpeg."""
+"""
+Knows how to call ffmpeg.
+See also for instance
+http://ffmpeg.org/documentation.html
+http://trac.ffmpeg.org/wiki/FFprobeTips
+
+"""
 
 import math
 import re
@@ -7,12 +13,32 @@ import typing as tg
 
 from pmlv.base import Stoptimes
 
+ffmpeg_cmd = "ffmpeg"
+ffprobe_cmd = "ffprobe"
 
 def make_pgm_logo(logofile: str, outputdir: str) -> str:
     pgmfile = f"{outputdir}/logo.pgm"
     cmd = f"ffmpeg -y -i {logofile} {pgmfile}"
     ffx_run(cmd)
     return pgmfile
+
+
+def get_videoresolution(file: str) -> tuple[int, int]:
+    """Return (width, height) in pixels. http://trac.ffmpeg.org/wiki/FFprobeTips#WidthxHeightresolution"""
+    opts = "-v error -select_streams v:0 -show_entries stream=width,height -of csv=nk=0:p=0"
+    output = ffx_getoutput(f"{ffprobe_cmd} -i {file} {opts}")
+    mm = re.search(r"width=(\d+)", output)
+    width = mm.group(1)
+    mm = re.search(r"height=(\d+)", output)
+    height = mm.group(1)
+    return (width, height)
+
+
+def get_videoduration_secs(file: str) -> float:
+    """See http://trac.ffmpeg.org/wiki/FFprobeTips#Duration"""
+    opts = "-v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1"
+    output = ffx_getoutput(f"{ffprobe_cmd} -i {file} {opts}")
+    return float(output)
 
 
 def find_rect(logopgmfile: str, region: dict, inputfile: str,
@@ -105,6 +131,13 @@ def find_stops(numvideos: int, stoplogo: str, region: dict,
         stoptimes = find_rect(stoplogo, region, videofile) 
         result.append(stoptimes)
     return result
+
+
+def ffx_getoutput(cmd: str) -> str:
+    status, output = subprocess.getstatusoutput(cmd)
+    if status != 0:
+        print(f"Command ''{cmd}'' failed!")  # will 'resolve' itself somehow...
+    return output
 
 
 def ffx_popen(cmd: str, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL

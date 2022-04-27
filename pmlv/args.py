@@ -9,7 +9,7 @@ from pathlib import Path
 description = "PowerPoint-based maintainable lecture videos tool"
 projectsite = "https://github.com/prechelt/pomalevi"
 
-def parse_args():
+def process_args(get_videoresolution: callable):
     #----- configure and use argparser:
     parser = argparse.ArgumentParser(
             description=description, epilog=projectsite)
