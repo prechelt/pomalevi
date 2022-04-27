@@ -28,9 +28,9 @@ def get_videoresolution(file: str) -> tuple[int, int]:
     opts = "-v error -select_streams v:0 -show_entries stream=width,height -of csv=nk=0:p=0"
     output = ffx_getoutput(f"{ffprobe_cmd} -i {file} {opts}")
     mm = re.search(r"width=(\d+)", output)
-    width = mm.group(1)
+    width = int(mm.group(1))
     mm = re.search(r"height=(\d+)", output)
-    height = mm.group(1)
+    height = int(mm.group(1))
     return (width, height)
 
 
@@ -117,8 +117,9 @@ def encode_in_parts(inputfile: str, outputdir: str, splittimes: tg.List[float]):
             parts[0] = f"{remainder}{parts[0]}"
             for part in parts[:-1]:
                 if part.startswith("frame="):  # a progress indicator line
-                    pos = part.find("time=")
-                    print(part[pos:], end='\r')  # the full line is rather long
+                    mm = re.search("time=.+speed=[\d\.]+x", part)
+                    if mm:
+                        print(mm.group(0), end='\r')
             remainder = parts[-1]  # if this happens to be a complete line: bad luck!
     print("Encoding DONE")
 
