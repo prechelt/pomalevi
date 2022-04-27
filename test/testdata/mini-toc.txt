@@ -1,0 +1,6 @@
+Title for mini
+
+first toc entry
+
+second toc entry
+
