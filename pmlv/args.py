@@ -1,9 +1,11 @@
 """Knows about command structure, argument parsing, defaults, and checks."""
 
 import argparse
+import os, os.path
 import re
 import typing as tg
-from pathlib import Path
+
+import pmlv.base as base
 
 
 description = "PowerPoint-based maintainable lecture videos tool"
@@ -25,35 +27,66 @@ def process_args(get_videoresolution: callable):
                         help='stop when stoplogo appears in upper right corner (or ul, lr, ll)')
     parser.add_argument('--toc', type=str, metavar='contents.txt',
                         help='content description: title, one paragraph per split part')
+    parser.add_argument('--out outputdir', type=str,
+                        help='directory to which output files will be written')
     parser.add_argument('inputfile', type=str,
                         help='video file to be processed (usually mp4 or wmv)')
-    parser.add_argument('outputdir', type=str,
-                        help='directory to which output files will be written')
     args = parser.parse_args()
-    args.vidwidth = 1920  # hardcoded video size: FullHD
-    args.vidheight = 1080
+    #----- determine helper args values:
+    args.inputdir, args.inputfilename = os.path.split(args.inputfile)
+    args.inputbasename, args.inputsuffix = os.path.splitext(args.inputfilename)
     #----- manually check for further problems:
-    if not Path(args.inputfile).exists():
+    if not os.path.exists(args.inputfile):
         parser.error(f"file {args.inputfile} must be readable")
-    if args.cssfile and not Path(args.cssfile).exists():
+    if args.cssfile and not os.path.exists(args.cssfile):
         parser.error(f"file {args.cssfile} must be readable")
     # we do not check that args.outputdir is a writable directory or nonexisting
-    if args.split_at:
-        args.splitlogo, args.splitlogoregion = parse_logo_info(
-                parser, args, args.split_at, "--split-at")
-    if args.stop_at:
-        args.stoplogo, args.stoplogoregion = parse_logo_info(
-                parser, args, args.stop_at, "--stop-at")
+    #----- retrieve video resolution:
+    args.vidwidth, args.vidheight = get_videoresolution(args.inputfile)
+    print(f"video resolution: {args.vidwidth}x{args.vidheight}")
+    #----- handle defaults:
+    handle_out(parser, args)
+    handle_split_at(parser, args)
+    handle_stop_at(parser, args)
+    handle_toc(parser, args)
     return args
 
 
+def handle_out(parser: argparse.ArgumentParser, args: argparse.Namespace):
+    if hasattr(args, "out"):
+        args.outputdir = args.out
+    else:
+        args.outputdir = args.inputdir
+
+
+def handle_split_at(parser: argparse.ArgumentParser, args: argparse.Namespace):
+    args.split_at_by_default = not args.split_at
+    if args.split_at_by_default:
+        args.split_at = "ll:splitlogo.png"
+    args.splitlogo, args.splitlogoregion = parse_logo_info(
+            parser, args, args.split_at, "--split-at", args.split_at_by_default)
+
+
+def handle_stop_at(parser: argparse.ArgumentParser, args: argparse.Namespace):
+    args.stop_at_by_default = not args.stop_at
+    if args.stop_at_by_default:
+        args.stop_at = "ll:stoplogo.png"
+    args.stoplogo, args.stoplogoregion = parse_logo_info(
+            parser, args, args.stop_at, "--stop-at", args.stop_at_by_default)
+
+
+def handle_toc(parser: argparse.ArgumentParser, args: argparse.Namespace):
+    ...
+
+
 def parse_logo_info(argparser: argparse.ArgumentParser, args: argparse.Namespace,
-                    logoinfo: str, optname: str,
+                    logoinfo: str, optname: str, by_default: bool
                    ) -> tg.Tuple[str,dict]:
     """
     logoinfo is the value of option --split-at or --stop-at (optname).
     Checks logo exists and logoregion information is OK.
     Returns logo filename and find_rect search region coordinates.
+    When using defaults and logo does not exist, return (None, None).
     """
     #----- ensure we have a colon and get left/right parts:
     mm_global = re.fullmatch(r"(.+):(.+)", logoinfo)
@@ -63,9 +96,14 @@ def parse_logo_info(argparser: argparse.ArgumentParser, args: argparse.Namespace
     logoregion = mm_global.group(1)
     logofile = mm_global.group(2)
     #----- ensure logofile:
-    if not Path(logofile).exists():
-        argparser.error(f"file {logofile} not found")
-        return
+    where_to_look = (args.inputdir, f"{args.inputdir}/toc")
+    logofile_as_found = base.find(where_to_look, logofile)
+    if not logofile_as_found:
+        if by_default:
+            return (None, None)
+        else:
+            argparser.error(f"file {logofile} not found")
+            return
     if not logofile.endswith(".png") and not logofile.endswith(".PNG"):
         argparser.error(f"{logofile} has wrong file type; must be *.png or *.PNG")
         return
@@ -100,6 +138,6 @@ def parse_logo_info(argparser: argparse.ArgumentParser, args: argparse.Namespace
         region['xmin'] = args.vidwidth - logowidth - width_tol - 1
         region['xmax'] = args.vidwidth - logowidth - 1
     assert set(region.keys()) == {'xmin', 'xmax', 'ymin', 'ymax'}
-    return (logofile, region)
+    return (logofile_as_found, region)
 
 

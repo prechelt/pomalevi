@@ -15,19 +15,19 @@ def doitall():
     wait_for_powerpoint(args.inputfile)
     if not Path(args.outputdir).exists():
         os.mkdir(args.outputdir, mode=0o755)
-    if hasattr(args, 'split_at'):
+    if args.splitlogo:
         print("Searching for split times: --split-at", args.split_at)
         splitlogofile = ffmpeg.make_pgm_logo(args.splitlogo, args.outputdir)
         splittimes = ffmpeg.find_rect(splitlogofile, args.splitlogoregion,
                                       args.inputfile,
                                       add_start_and_end=True)
         os.remove(splitlogofile)
-        print("split times: ", splittimes)
-        ffmpeg.encode_in_parts(args.inputfile, args.outputdir, splittimes)
     else:
-        splittimes = [0.0, math.nan]
+        splittimes = [0.0, ffmpeg.get_videoduration_secs(args.inputfile)]
+    print("split times: ", splittimes)
+    ffmpeg.encode_in_parts(args.inputfile, args.outputdir, splittimes)
     numvideos = len(splittimes) - 1
-    if hasattr(args, 'stop_at'):
+    if args.stoplogo:
         print("Searching for stops in %d video%s: --stop-at"%
               (numvideos, "s" if numvideos != 1 else ""), args.stop_at)
         stoplogofile = ffmpeg.make_pgm_logo(args.stoplogo, args.outputdir)
