@@ -38,9 +38,10 @@ def doitall():
     else:
         stoptimes = [[] for _ in range(numvideos)]
     if args.toc:
-        title, toc = read_toc(args.toc, numvideos)
+        title, toc_entries = read_toc(args.toc, numvideos)
     else:
         basename = os.path.splitext(os.path.basename(args.inputfile))[0]
-        title, toc = (basename, [f"part {i+1}" for i in range(numvideos)])
-    generate_html(title, args.cssfile, args.cssurl, stoptimes, toc, args.outputdir)
+        title, toc_entries = (basename, [f"part {i+1}" for i in range(numvideos)])
+    generate_html(title, args.cssfile, args.cssurl, stoptimes, 
+                  toc_entries, args.outputdir)
     print("DONE.")

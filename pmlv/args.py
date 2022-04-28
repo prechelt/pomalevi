@@ -43,7 +43,7 @@ def process_args(get_videoresolution: callable):
     # we do not check that args.outputdir is a writable directory or nonexisting
     #----- retrieve video resolution:
     args.vidwidth, args.vidheight = get_videoresolution(args.inputfile)
-    print(f"video resolution: {args.vidwidth}x{args.vidheight}")
+    print(f"Video resolution: {args.vidwidth}x{args.vidheight}")
     #----- handle defaults:
     handle_out(parser, args)
     handle_split_at(parser, args)
@@ -56,7 +56,7 @@ def handle_out(parser: argparse.ArgumentParser, args: argparse.Namespace):
     if hasattr(args, "out"):
         args.outputdir = args.out
     else:
-        args.outputdir = args.inputdir
+        args.outputdir = f"{args.inputdir}/{args.inputbasename}"
 
 
 def handle_split_at(parser: argparse.ArgumentParser, args: argparse.Namespace):
@@ -76,7 +76,16 @@ def handle_stop_at(parser: argparse.ArgumentParser, args: argparse.Namespace):
 
 
 def handle_toc(parser: argparse.ArgumentParser, args: argparse.Namespace):
-    ...
+    #if hasattr(args, "toc"):
+    if args.toc:
+        return  # use given toc; else impute default:
+    where_to_look = (args.inputdir, f"{args.inputdir}/toc")
+    tocfilename = f"{args.inputbasename}-toc.txt"  # can be found in local dir!
+    args.toc = base.find(where_to_look, tocfilename)  # empty string if not found
+    if args.toc:
+        print(f"Using {args.toc} for table of contents")
+    else:
+        print("No table of contents (toc) file found. Will generate trivial toc.")
 
 
 def parse_logo_info(argparser: argparse.ArgumentParser, args: argparse.Namespace,
