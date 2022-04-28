@@ -303,15 +303,16 @@ in the output directory during encoding (and then disappear again).
 
 Improvements waiting to be made:
 
-- fix ffmpeg output during encoding phase
-- webm
-- smaller audio (by quality)
-- `--ffmpeg` to submit encoding options
 - setuptools, static-ffmpeg, generate binary
+- make demo.ppt
 - command keywords `encode`, `compress`, `patch`.
+- webm, `--mp4`
+- smaller audio (by quality)
+- `patch`
+- `--ffmpeg` to submit encoding options
+- `compress`
 - highlight current video in toc
 - make `pomalevi.css` mobile-ready
-- make demo.ppt
 - `--favicon file`: Name of a 32x32 pixel PNG file to be used as the favicon.
 - search for default `--toc` file `<basename>-toc.txt`  
 
@@ -321,8 +322,8 @@ Improvements waiting to be made:
 - 0.7, 2022-03-18
   - initial version, with most of the functionality:
     encode with splits and stops, basic CSS, TOC
-- NEXT:
-  - white backgrounds for the suggested splitlogo and stoplogo
-  - create trivial TOC implicitly if no tocfile is provided
-  - `--cssfile` and `--cssurl`
-  - ...
+- 0.8, 2022-04-28:
+  - lots of small additions to functionality
+  - obtain actual video resolution
+  - modularized internal structure
+  - friendly defaults for `--split-at`, `--stop-at`, `--toc`, `--out`.

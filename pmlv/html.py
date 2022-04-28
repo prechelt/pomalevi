@@ -54,8 +54,8 @@ html_template = """
 
     <footer class="pmlv-footer">
       <p>Generated %(date)s 
-         by <a href="https://github.com/prechelt/pomalevi">pomalevi</a>:
-         crude, but effective.
+         by <a href="https://github.com/prechelt/pomalevi">pomalevi</a> &mdash;
+         Powerpoint-based maintainable lecture videos.
       </p>
     </footer>
 

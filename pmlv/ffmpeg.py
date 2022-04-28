@@ -18,7 +18,7 @@ ffprobe_cmd = "ffprobe"
 
 def make_pgm_logo(logofile: str, outputdir: str) -> str:
     pgmfile = f"{outputdir}/logo.pgm"
-    cmd = f"ffmpeg -y -i {logofile} {pgmfile}"
+    cmd = f"{ffmpeg_cmd} -y -i {logofile} {pgmfile}"
     ffx_run(cmd)
     return pgmfile
 
@@ -83,7 +83,7 @@ def find_rect(logopgmfile: str, region: dict, inputfile: str,
     r = region  # abbrev
     rectangle = f"xmin={r['xmin']}:xmax={r['xmax']}:ymin={r['ymin']}:ymax={r['ymax']}"
     show_spec = "frame=pkt_pts_time:frame_tags=lavfi.rect.x,lavfi.rect.y"
-    cmd = ("ffprobe -f lavfi movie=%s,%s:%s -show_entries %s -of csv" %
+    cmd = (f"{ffprobe_cmd} -f lavfi movie=%s,%s:%s -show_entries %s -of csv" %
            (inputfile, find_rect_filter, rectangle, show_spec))
     p = ffx_popen(cmd)
     result = newmatch_times(p.stdout, region)
@@ -101,7 +101,7 @@ def encode_in_parts(inputfile: str, outputdir: str, splittimes: tg.List[float]):
     for i in range(1, n+1):  # i in 1..n for building v{i].mp4
         from_to = f"-ss %.2f -to %.2f" % (splittimes[i-1], splittimes[i])
         outputfile = f"{outputdir}/v{i}.mp4"
-        cmd = (f"ffmpeg -y {from_to} -i {inputfile} "
+        cmd = (f"{ffmpeg_cmd} -y {from_to} -i {inputfile} "
                f"{video_args} {audio_args} {outputfile}")
         # os.system(cmd)
         p = ffx_popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
@@ -145,7 +145,7 @@ def ffx_popen(cmd: str, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
              ) -> subprocess.Popen:
     """
     Popen ffmpeg cmd with stdout and stderr as given; at most one of them a pipe.
-    Caller must read the pipe to end and then call p.wait().
+    Caller must read the pipe to the end and then call p.wait().
     """
     trace(cmd)
     LINEBUFFERED = 1
@@ -161,8 +161,8 @@ def ffx_run(cmd: str) -> subprocess.CompletedProcess:
 
 
 def imagesize(imgfile: str) -> tg.Tuple[int,int]:
-    """Returns (width, height) of image in imgfile."""
-    cmd = f"ffprobe -i {imgfile}"
+    """Returns (width, height) of image in imgfile. TODO: simplify!"""
+    cmd = f"{ffprobe_cmd} -i {imgfile}"
     p = ffx_popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
     for line in p.stderr:
         pass  # keep only the last line
@@ -180,4 +180,4 @@ def imagesize(imgfile: str) -> tg.Tuple[int,int]:
 
 
 def trace(msg: str):
-    print("##: ", msg)
+    pass  # print("##: ", msg)
