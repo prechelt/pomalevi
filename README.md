@@ -3,34 +3,36 @@
 PowerPoint-based maintainable lecture videos tool
 
 
-## What it is
+## What `pomalevi` is
 
 PowerPoint allows recording slide shows 
-with narration and a webcam insert
+with narration and even a webcam insert
 with its SlideShow⟶RecordSlideShow function.
 The media files are stored within the PPT file on a per-slide basis.
-This can be turned into a video via "File⟶Export"
+This can be turned into a video via "File⟶SaveAs⟶*.wmv"
 
 pomalevi converts such a video file (or any other) as follows:
 
 - it turns the huge video produced by PowerPoint into a _much_ smaller one
-  by applying more reasonable compression
+  by applying more reasonable compression settings
 - it can split the video into parts (separate, shorter videos) based on 
   when a user-defined `splitlogo` appears in the video
-- it produces a simple HTML page with a table of content hyperlinks for these
+- it produces a simple HTML page with table of content hyperlinks for these
   parts based on a trivial text file containing parts descriptions
 - it provides a very simple HTML player that will stop the video
-  when a user-defined `stoplogo` appears in the video.
+  when a user-defined `stoplogo` appears in the video,
+  so that the audience can ponder a question.
 
 
-## Why it exists
+## Why `pomalevi` exists
 
 I have previously used Camtasia to record lecture videos with Camtasia's
 PowerPoint plugin.
 I have inserted the stops I wanted (after I'd asked the viewers a question)
-manually in the Camtasia Editor and then also manually cut the video
+manually in the Camtasia Editor and then cut the video
 into the five-or-so pieces (of 10-20 minutes each) I want 
-and exported ("produced") each piece individually.
+and exported ("produced") each piece individually using the Batch Production
+feature.
 
 This gives nice results, but is a lot of manual work. 
 It is acceptable for a one-time process, but what if I want to modify 
@@ -48,9 +50,23 @@ with fully automated postprocessing.
 A couple of couples of hours later here we go.
 
 
-## How to install it
+## Pros and cons
 
-This is a crude and minimal solution, 
+Pro:
+- Pomalevi-plus-Powerpoint produces very useful output with little effort
+- Subsequent changes are easy to make, your lecture videos become maintainable
+
+Con:
+- Depending on how fast your computer is, re-creating a pomalevi video
+  takes a substantial amount of time during which your machine is very busy.
+
+In my case, it is typically about 1.5x the video play time,
+the bigger part of which is needed by the Powerpoint video export.
+
+
+## How to install `pomalevi`
+
+This is so far a crude and minimal solution, 
 with no readthedocs documentation,
 no release process, 
 and no pip package. 
@@ -78,7 +94,8 @@ To "install",
   path on each commandline (or make an alias).
 
 
-## How to use it
+## How to use `pomalevi`
+
 
 ### View demo.pptx (1 minute)
 
@@ -91,47 +108,49 @@ start the slide show.
 You can now "File⟶Save as" this file,
 select file format "Windows Media Video (*.wmv)",
 and so create a `demo.wmv` file with you can use as the
-`input.wmv` in the subsequent examples.
+`myslides.wmv` in the subsequent examples.
+
 
 ### Very basic use: Compression only
 
-`pomalevi.py input.wmv output_dirname`
+`pomalevi.py mydir/myslides.wmv`
 
-The output is a directory with several files.
-You can either use `output_dirname/v.html` 
+The output is a directory `mydir/myslides/` with several files.
+You can either use `mydir/myslides/index.html` 
 to get the pomalevi player or
-just the video itself: `output_dirname/v1.mp4`.
+just the video itself: `mydir/myslides/v1.mp4`.
+
 
 ### Inserting stops: `-stop-at`
 
-- In Powerpoint, choose a unique graphic or text string that will appear in your
+- In Powerpoint, choose a **unique graphic** or text string that will appear in your
   video to indicate to pomalevi where to insert a stop.
 - For instance, I use "Insert⟶Icons⟶Business"
   pick the two people with the question mark (I have PowerPoint 2019),
   keep the default size, fill the icon with my highlight color (dark red),
   and put it in the lower left corner of my slide.
-  (Any corner can be made to work, other places make things more difficult.)
-- You could in principle also use the string "STOP!" in a suitably
-  unique font and size or whatever other fixed-and-unique visual element you like.
-  Just make sure it never appears anywhere where you do _not_ want a stop.
-- Insert an Entrance animation for the logo at the appropriate moment,
+  (Any corner can be made to work easily, other places are possible if needed.)
+- You could in principle also use the string "STOP!" or whatever other 
+  fixed-and-unique visual element you like.
+- Insert an **Entrance animation** for the logo at the appropriate moment,
   perhaps insert an Exit animation shortly thereafter.
   Only the entrance moment is relevant; it is the stop moment.  
   Note that the player is not capable of stopping at _exactly_ this moment;
-  expect a tolerance of +0.25 seconds.
+  expect a tolerance of +0.25 seconds (0.5 seconds for Firefox).
 - Export the video from PowerPoint.  
-  Play it at original scale.  
+  Play it at original scale (that is, size 100%).  
   Stop it when the logo is visible.  
-  Make a rectangular-area screenshot of only the logo.  
+  Make a rectangular-area **screenshot** of only the logo.  
   Store it as PNG, e.g. `stoplogo.png`.
 - Here is what the result looks like in my case:
   <img src="img/stoplogo.png" alt="Example pomalevi stop logo">
 - pomalevi makes a pixel-by-pixel search for this image and expects
   a match of at least 80%, so beware of non-rectangular or transparent logos
-  if your background is not plain white.
+  if the slide background is not always the same.
+  See also section "Caveats" below.
 - Now produce the video with pomalevi:  
-  `pomalevi.py --stop-at ll:stoplogo.png input.wmv outputdir`  
-  (`ll` stands for "lower left")
+  `pomalevi.py --stop-at ll:stoplogo.png mydir/myslides.wmv`  
+  (`ll` stands for **"lower left"**)
 - Searching for a stoplogo is a slooow process if done over the whole image.
   Therefore, pomalevi expects the logo to be in one of the four corners
   of the slide: one of `ul`, `ur`, `ll`, `lr` 
@@ -149,38 +168,53 @@ just the video itself: `output_dirname/v1.mp4`.
   x=0,y=0 is the upper left corner.
 - Unlike for basic use, this time the `v1.mp4` file is not helpful,
   because it knows nothing about the stops.  
-  Instead, you need to use `outputdir/v.html`, which calls
-  the pomalevi player and feeds it the proper list of stop times.
+  Instead, you need to use `mydir/myslides/index.html`, which calls
+  the **pomalevi player** and feeds it the proper list of stop times.
+- Like most pomalevi options, `--stop-at` has **friendly defaults**:
+  - `--stop-at ll:stoplogo.png` will be assumed by default,
+    but if `stoplogo.png` is not found, no stoplogo search will be performed.
+  - The stoplogo will be searched for in several places:
+    - `./stoplogo.png`, in the local directory
+    - `mydir/stoplogo.png`, in the input file directory
+    - `mydir/../stoplogo.png`, in the parent of the input file directory
+    - `mydir/toc/stoplogo.png`, in the `toc` subdirectory of the input file 
+      directory (see the description of `--toc` below).
 
 
 ### Splitting into parts: `--split-at`
 
-- Splitting works much the same as stopping (described above):  
+The output of pomalevi appears a bit silly unless you let pomalevi 
+split your video into several parts.
+
+- Splitting works **much the same as stopping** (described above):  
   Decide on a logo (of course not the same as for stopping),  
   insert it in your presentation (say, in the lower right),  
   make a screenshot of it in the original size,  
   store it as `splitlogo.png` or so,  
   call pomalevi with it:  
-  `pomalevi.py --split-at lr:splitlogo.png input.wmv outputdir`  
+  `pomalevi.py --split-at ll:splitlogo.png input.wmv outputdir`  
 - Splitting creates a separate video file for each part, called
   `v1.mp4`, `v2.mp4`, etc.
-- `outputdir/v.html` provides navigation between those videos.
+- `mydir/myslides/index.html` provides navigation between those videos.
+- The same **friendly defaults** apply as for `--stop-at`.
 
 
 ### Navigation with content description: `--toc`
 
-All you get so far for navigation in the HTML file are large
-numbers "1", "2" etc. that are hyperlinks which load the respective
+All you get so far for navigation in the HTML file are generic section
+titles "part 1", "part 2", etc. that are hyperlinks which load the respective
 part of the video.
 You can get a text to the right of each number that describes the
 content of that video part and also get a meaningful title
 for the HTML page by using the `--toc filename` option (table of contents):
 
 The file given must be a UTF-8-encoded plain-text file
-with a paragraph structure. 
+with a paragraph structure (as for instance MS Windows' `notepad` editor
+can produce them).
 Paragraphs are separated simply by an empty line.
 
-The first paragraph (paragraph 0) provides the title.  
+The first paragraph (paragraph 0) provides the title of the 
+`index.html` page.  
 Subsequent paragraphs 1..N provide the content description for
 video parts 1..N.
 
@@ -189,30 +223,44 @@ Example:
 This is the title
 
 This is the description of video part 1. It is a longer one that
-takes multiple lines.
+takes multiple lines. Those lines will be rendered as a flowing
+paragraph of text on the HTML page.
 
 This is the description of video part 2.
 ```
 
-Taking all of the above together, we get the following pomalevi call:  
-`pomalevi.py --split-at lr:splitlogo.png --stop-at ll:stoplogo.png --toc input-contents.txt input.wmv outputdir```
+Like most pomalevi options, `--toc` has **friendly defaults**:
+- `--toc myslides-toc.txt` will be assumed by default,
+  but if `myslides-toc.txt` is not found, the generic toc will be produced instead.
+- The toc file will be searched for in several places:
+  - `./myslides-toc.txt`, in the local directory
+  - `mydir/myslides-toc.txt`, in the input file directory
+  - `mydir/toc/stoplogo.png`, in the `toc` subdirectory of the input file 
+     directory.
 
-### Overlap Powerpoint export and pomalevi: `--wait`!!!
+Taking all of the above together, the pomalevi call:  
+`pomalevi.py --split-at lr:splitlogo.png --stop-at ll:stoplogo.png --toc input-contents.txt input.wmv outputdir`
+
+
+### Overlapping Powerpoint export and pomalevi: waiting
 
 - Powerpoint export takes a long time,
   pomalevi encoding also takes a long time.
   It would be nice if we could start pomalevi before Powerpoint has 
   finished exporting.  
-  The `--wait` flag does that.
-- It will observe the input file until it changes its file size,
-  then wait until it has no longer changed its file size for another 10 seconds,
+  Consider it done!
+- pomalevi will automatically wait until the given input file appears to 
+  have been exported completely
   and only then start the actual pomalevi work.
 
 
-### Other options
+### Output formats: MP4 vs. Webm
 
-- `-v`: Verbose mode. Prints the ffmpeg commands before they are started.
+pomalevi currently produces `*.mp4` video files.
 
+In the future, it will default to the more modern `*.webm`
+(this is also what for instance YouTube uses)
+and allow MP4 as an option.
 
 
 ## How it works
@@ -227,7 +275,8 @@ for each part.
 works only with a rectangular image, 
 and it considers only a grayscale version of it with no alpha channel.
 
-If you use `logo.png`, its grayscale derivative `logo.pgm` will appear
+If you use a logo file `mylogo.png`, 
+its grayscale derivative `mylogo.pgm` will appear
 in the output directory during encoding (and then disappear again).
 
 
@@ -246,16 +295,34 @@ in the output directory during encoding (and then disappear again).
 - Because of how it works (see above), the search for stop logo or split logo
   may fail if the logo has transparent parts and is placed onto other  
   material. The logo match is fuzzy, but expects at least an 80% match.
+- Unless you place your logo _precisely_ in the corner, fine details in
+  the logo will make the match worse. Prefer simple logos.
 
   
 ## TODO
 
 Improvements waiting to be made:
 
-- `--only 1,3`: Will re-encode only split parts 1 and 3 and leave the others
-  as they are. Saves time after small changes to large videos with enough parts.
+- fix ffmpeg output during encoding phase
+- webm
+- smaller audio (by quality)
+- `--ffmpeg` to submit encoding options
+- setuptools, static-ffmpeg, generate binary
+- command keywords `encode`, `compress`, `patch`.
+- highlight current video in toc
+- make `pomalevi.css` mobile-ready
+- make demo.ppt
 - `--favicon file`: Name of a 32x32 pixel PNG file to be used as the favicon.
-- `--cssurl url`: URL of a CSS file to be imported in the HTML 
-- `--cssfile file`: name of a CSS file to be copied to outputdir and used
-- The HTML generation is crude, perhaps it should it be improved.
-  
+- search for default `--toc` file `<basename>-toc.txt`  
+
+
+## Versions
+
+- 0.7, 2022-03-18
+  - initial version, with most of the functionality:
+    encode with splits and stops, basic CSS, TOC
+- NEXT:
+  - white backgrounds for the suggested splitlogo and stoplogo
+  - create trivial TOC implicitly if no tocfile is provided
+  - `--cssfile` and `--cssurl`
+  - ...
