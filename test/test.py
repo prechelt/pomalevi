@@ -27,8 +27,7 @@ def test_basic_functionality():
             toc2_p2 = f.readline().rstrip()
         #----- run pomalevi with split and stop:
         os.chdir(mydir)  # we work in the scratch directory
-        cmd = ("python %s --split-at ll:splitlogo.png --stop-at ll:stoplogo.png --toc %s mini.wmv mini" %
-               (f"{pomdir}/pomalevi.py", "mini-toc.txt"))
+        cmd = f"python {pomdir}/pomalevi.py mini.wmv"
         os.system(cmd)
         #----- check outputdir:
         assert os.path.exists("mini/index.html")

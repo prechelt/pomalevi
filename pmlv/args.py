@@ -34,6 +34,8 @@ def process_args(get_videoresolution: callable):
     args = parser.parse_args()
     #----- determine helper args values:
     args.inputdir, args.inputfilename = os.path.split(args.inputfile)
+    if not args.inputdir:
+        args.inputdir = "."  # avoid creating paths like "/myslides" later
     args.inputbasename, args.inputsuffix = os.path.splitext(args.inputfilename)
     #----- manually check for further problems:
     if not os.path.exists(args.inputfile):
@@ -105,7 +107,7 @@ def parse_logo_info(argparser: argparse.ArgumentParser, args: argparse.Namespace
     logoregion = mm_global.group(1)
     logofile = mm_global.group(2)
     #----- ensure logofile:
-    where_to_look = (args.inputdir, f"{args.inputdir}/toc")
+    where_to_look = (args.inputdir, f"{args.inputdir}/..", f"{args.inputdir}/toc")
     logofile_as_found = base.find(where_to_look, logofile)
     if not logofile_as_found:
         if by_default:
