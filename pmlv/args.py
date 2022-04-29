@@ -22,10 +22,10 @@ def process_args(get_videoresolution: callable):
     parser.add_argument('--cssurl', type=str, metavar='http://.../mycss.css or mycss.css',
                         help='relative or absolute URL to CSS')
     parser.add_argument('--split-at', type=str, metavar='ll:splitlogo.png',
-                        help='split when splitlogo appears in upper right corner (or ul, lr, ll)')
-    parser.add_argument('--stop-at', type=str, metavar='ur:stoplogo.png',
-                        help='stop when stoplogo appears in upper right corner (or ul, lr, ll)')
-    parser.add_argument('--toc', type=str, metavar='contents.txt',
+                        help='split when splitlogo appears in lower left corner (or lr, ul, ur)')
+    parser.add_argument('--stop-at', type=str, metavar='ll:stoplogo.png',
+                        help='stop when stoplogo appears in lower left corner (or lr, ul, ur)')
+    parser.add_argument('--toc', type=str, metavar='inputfile-toc.txt',
                         help='content description: title, one paragraph per split part')
     parser.add_argument('--out outputdir', type=str,
                         help='directory to which output files will be written')
@@ -37,6 +37,9 @@ def process_args(get_videoresolution: callable):
     if not args.inputdir:
         args.inputdir = "."  # avoid creating paths like "/myslides" later
     args.inputbasename, args.inputsuffix = os.path.splitext(args.inputfilename)
+    #----- promote -v globally:
+    if args.verbose:
+        base.verbose = True
     #----- manually check for further problems:
     if not os.path.exists(args.inputfile):
         parser.error(f"file {args.inputfile} must be readable")

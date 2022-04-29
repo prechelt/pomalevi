@@ -6,6 +6,9 @@ import typing as tg
 
 Stoptimes = tg.List[tg.List[float]]
 
+verbose = False
+
+
 def open(dirlist: tg.Sequence[str], filename: str, mode: str):
     """Open filename as is or in any of the given dirs."""
     if os.path.exists(filename):
@@ -16,6 +19,7 @@ def open(dirlist: tg.Sequence[str], filename: str, mode: str):
             return builtins.open(fullname, mode)
     return open(filename, mode)  # fail like a vanilla open() would
 
+
 def find(dirlist: tg.Sequence[str], filename: str) -> str:
     if os.path.exists(filename):
         return filename
@@ -24,3 +28,8 @@ def find(dirlist: tg.Sequence[str], filename: str) -> str:
         if os.path.exists(fullname):
             return fullname
     return ''  # not found
+
+
+def trace(cmd):
+    if verbose:
+        print("### ", cmd)        

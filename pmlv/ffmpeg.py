@@ -9,9 +9,10 @@ http://trac.ffmpeg.org/wiki/FFprobeTips
 import math
 import re
 import subprocess
+import sys
 import typing as tg
 
-from pmlv.base import Stoptimes
+import pmlv.base as base
 
 ffmpeg_cmd = "static_ffmpeg"
 ffprobe_cmd = "static_ffprobe"
@@ -125,7 +126,7 @@ def encode_in_parts(inputfile: str, outputdir: str, splittimes: tg.List[float]):
 
 
 def find_stops(numvideos: int, stoplogo: str, region: dict,
-               outputdir: str) -> Stoptimes:
+               outputdir: str) -> base.Stoptimes:
     result = []
     for i in range(1, numvideos+1):  # i in 1..numvideos for scanning v{i].mp4
         videofile = f"{outputdir}/v{i}.mp4"
@@ -135,9 +136,11 @@ def find_stops(numvideos: int, stoplogo: str, region: dict,
 
 
 def ffx_getoutput(cmd: str) -> str:
+    base.trace(cmd)
     status, output = subprocess.getstatusoutput(cmd)
     if status != 0:
-        print(f"Command ''{cmd}'' failed!")  # will 'resolve' itself somehow...
+        print(f"Command ''{cmd}'' failed!  {output}")  # will 'resolve' itself somehow...
+        sys.exit(1)
     return output
 
 
@@ -147,7 +150,7 @@ def ffx_popen(cmd: str, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
     Popen ffmpeg cmd with stdout and stderr as given; at most one of them a pipe.
     Caller must read the pipe to the end and then call p.wait().
     """
-    trace(cmd)
+    base.trace(cmd)
     LINEBUFFERED = 1
     return subprocess.Popen(cmd,
         bufsize=LINEBUFFERED, stdout=stdout, stderr=stderr,
@@ -156,7 +159,7 @@ def ffx_popen(cmd: str, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
 
 def ffx_run(cmd: str) -> subprocess.CompletedProcess:
     """Run ffmpeg cmd with output suppressed."""
-    trace(cmd)
+    base.trace(cmd)
     return subprocess.run(cmd, capture_output=True, check=True, shell=True)
 
 
@@ -177,7 +180,3 @@ def imagesize(imgfile: str) -> tg.Tuple[int,int]:
         return (int(mm.group(1)), int(mm.group(2)))
     else:
         print(f"Cannot parse output of '{cmd}':\n", line)
-
-
-def trace(msg: str):
-    pass  # print("##: ", msg)

@@ -2,11 +2,12 @@ import os
 import re
 import shutil
 import tempfile
+import time
 
 import pytest
 
 def test_basic_functionality():
-    with tempfile.TemporaryDirectory() as mydir:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as mydir:
         pomdir = os.path.dirname(__file__) + "/.."  # one above 'test'
         #----- prepare files:
         shutil.copytree("test/testdata", mydir, dirs_exist_ok=True)
@@ -54,3 +55,6 @@ def test_basic_functionality():
         assert 85000 < v2_size < 90000
         #----- patch toc:
         #----- check new toc:
+        #----- prepare cleanup on Windows:
+        # Windows fails when removing the tempdir, because we are in it:
+        os.chdir('..')
