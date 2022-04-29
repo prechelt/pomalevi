@@ -13,8 +13,8 @@ import typing as tg
 
 from pmlv.base import Stoptimes
 
-ffmpeg_cmd = "ffmpeg"
-ffprobe_cmd = "ffprobe"
+ffmpeg_cmd = "static_ffmpeg"
+ffprobe_cmd = "static_ffprobe"
 
 def make_pgm_logo(logofile: str, outputdir: str) -> str:
     pgmfile = f"{outputdir}/logo.pgm"
@@ -53,25 +53,25 @@ def find_rect(logopgmfile: str, region: dict, inputfile: str,
     def newmatch_times(file, region: dict) -> tg.List[float]:
         """
         Returns the times at which stretches of matches start.
-        Prints status once per minute.
+        Prints status every few video seconds.
         """
         result = [0.0] if add_start_and_end else []
         previous_quintasec = -1
         previous_is_match = False
         for line in file:
-            fields = line.split(',')
-            assert fields[0] == "frame"
-            quintasec = math.floor(float(fields[1])/5.0)
+            f = line.split(',')
+            assert f[0] == "frame"
+            quintasec = math.floor(float(f[1])/5.0) if f[1] else previous_quintasec
             if quintasec > previous_quintasec:
                 previous_quintasec = quintasec
                 print("%d secs processed, logo matched %dx" %
                       (5*quintasec, len(result) - add_start_and_end), end='\r')
-            is_match = len(fields) > 2  # frame,time,xcoord,ycoord
+            is_match = len(f) > 2  # frame,time,xcoord,ycoord
             if is_match and not previous_is_match:  # start of new match
                 # print("\n", line[:-1])
-                result.append(round(float(fields[1]), 2))
+                result.append(round(float(f[1]), 2))
             previous_is_match = is_match
-        end = float(fields[1])
+        end = float(f[1])
         if add_start_and_end:
             if end - result[-1] > 2.0:
                 result.append(end)
@@ -82,7 +82,7 @@ def find_rect(logopgmfile: str, region: dict, inputfile: str,
     find_rect_filter = f"find_rect={logopgmfile}:threshold=0.2"
     r = region  # abbrev
     rectangle = f"xmin={r['xmin']}:xmax={r['xmax']}:ymin={r['ymin']}:ymax={r['ymax']}"
-    show_spec = "frame=pkt_pts_time:frame_tags=lavfi.rect.x,lavfi.rect.y"
+    show_spec = "frame=pts_time:frame_tags=lavfi.rect.x,lavfi.rect.y"
     cmd = (f"{ffprobe_cmd} -f lavfi movie=%s,%s:%s -show_entries %s -of csv" %
            (inputfile, find_rect_filter, rectangle, show_spec))
     p = ffx_popen(cmd)
