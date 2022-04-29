@@ -1,5 +1,7 @@
 .idea/
-out/
+.pytest_cache/
+dist/
+**/__pycache__/
 ~*.pptx
 *.wmv
 test/testdata/mini
