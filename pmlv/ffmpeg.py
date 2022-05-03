@@ -6,16 +6,45 @@ http://trac.ffmpeg.org/wiki/FFprobeTips
 
 """
 
+import copy
 import math
 import re
 import subprocess
 import sys
 import typing as tg
 
+import attrs 
+
 import pmlv.base as base
 
 ffmpeg_cmd = "static_ffmpeg"
 ffprobe_cmd = "static_ffprobe"
+
+@attrs.define
+class Encoding:
+    # mp4: AAC params: https://trac.ffmpeg.org/wiki/Encode/AAC
+    # mp4: H.264 params: https://trac.ffmpeg.org/wiki/Encode/H.264
+    suffix: str  # filename suffix
+    flags_v: str  # ffmpeg video codec settings
+    flags_a: str  # ffmpeg audio codec settings
+
+
+
+_encodings = dict(
+    mp4 = Encoding("mp4", 
+                   "-c:v libx264 -crf 23 -preset medium -tune stillimage", 
+                   "-c:a aac -b:a 64k -movflags +faststart"),
+)
+
+
+def get_encoding(name: str, flags_v: str = None, flags_a: str = None):
+    enc = copy.copy(_encodings[name])
+    if flags_v:
+        enc.flags_v = flags_v
+    if flags_a:
+        enc.flags_a = flags_a
+    return enc
+
 
 def make_pgm_logo(logofile: str, outputdir: str) -> str:
     pgmfile = f"{outputdir}/logo.pgm"
@@ -92,18 +121,15 @@ def find_rect(logopgmfile: str, region: dict, inputfile: str,
     return result
 
 
-def encode_in_parts(inputfile: str, outputdir: str, splittimes: tg.List[float]):
+def encode_in_parts(inputfile: str, encoding: Encoding,
+                    outputdir: str, splittimes: tg.List[float]):
     n = len(splittimes) - 1  # start does not count
     print("Encoding %d video part%s" % (n, "s" if n != 1 else ""))
-    # AAC params: https://trac.ffmpeg.org/wiki/Encode/AAC
-    audio_args = "-c:a aac -b:a 64k -movflags +faststart"
-    # H.264 params: https://trac.ffmpeg.org/wiki/Encode/H.264
-    video_args = "-c:v libx264 -crf 23 -preset medium -tune stillimage"
     for i in range(1, n+1):  # i in 1..n for building v{i].mp4
         from_to = f"-ss %.2f -to %.2f" % (splittimes[i-1], splittimes[i])
-        outputfile = f"{outputdir}/v{i}.mp4"
+        outputfile = f"{outputdir}/v{i}.{encoding.suffix}"
         cmd = (f"{ffmpeg_cmd} -y {from_to} -i {inputfile} "
-               f"{video_args} {audio_args} {outputfile}")
+               f"{encoding.flags_v} {encoding.flags_a} {outputfile}")
         # os.system(cmd)
         p = ffx_popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
         remainder = ""

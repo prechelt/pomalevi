@@ -25,7 +25,8 @@ def doitall():
     else:
         splittimes = [0.0, ffmpeg.get_videoduration_secs(args.inputfile)]
     print("split times: ", splittimes)
-    ffmpeg.encode_in_parts(args.inputfile, args.outputdir, splittimes)
+    ffmpeg.encode_in_parts(args.inputfile, ffmpeg.get_encoding("mp4"), 
+                           args.outputdir, splittimes)
     numvideos = len(splittimes) - 1
     if args.stoplogo:
         print("Searching for stops in %d video%s: --stop-at"%
