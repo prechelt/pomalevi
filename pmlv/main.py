@@ -1,7 +1,5 @@
 """Entry point"""
-import math
 import os
-import typing as tg
 from pathlib import Path
 
 from pmlv.args import process_args
@@ -46,3 +44,7 @@ def doitall():
     generate_html(title, args.cssfile, args.cssurl, stoptimes, 
                   toc_entries, args.outputdir)
     print("DONE.")
+
+
+if __name__ == '__main__':
+    doitall()
