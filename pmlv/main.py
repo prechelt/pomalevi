@@ -9,7 +9,7 @@ from pmlv.ppt import wait_for_powerpoint
 
 
 def doitall():
-    args = process_args(ffmpeg.get_videoresolution)
+    args = process_args(ffmpeg.get_videoresolution, ffmpeg.get_imagesize)
     wait_for_powerpoint(args.inputfile)
     if not Path(args.outputdir).exists():
         os.mkdir(args.outputdir, mode=0o755)

@@ -11,7 +11,7 @@ import pmlv.base as base
 description = "PowerPoint-based maintainable lecture videos tool"
 projectsite = "https://github.com/prechelt/pomalevi"
 
-def process_args(get_videoresolution: callable):
+def process_args(get_videoresolution: callable, get_imagesize: callable):
     #----- configure and use argparser:
     parser = argparse.ArgumentParser(
             description=description, epilog=projectsite)
@@ -51,8 +51,8 @@ def process_args(get_videoresolution: callable):
     print(f"Video resolution: {args.vidwidth}x{args.vidheight}")
     #----- handle defaults:
     handle_out(parser, args)
-    handle_split_at(parser, args)
-    handle_stop_at(parser, args)
+    handle_split_at(parser, args, get_imagesize)
+    handle_stop_at(parser, args, get_imagesize)
     handle_toc(parser, args)
     return args
 
@@ -64,20 +64,24 @@ def handle_out(parser: argparse.ArgumentParser, args: argparse.Namespace):
         args.outputdir = f"{args.inputdir}/{args.inputbasename}"
 
 
-def handle_split_at(parser: argparse.ArgumentParser, args: argparse.Namespace):
+def handle_split_at(parser: argparse.ArgumentParser, args: argparse.Namespace,
+                    get_imagesize: callable):
     args.split_at_by_default = not args.split_at
     if args.split_at_by_default:
         args.split_at = "ll:splitlogo.png"
     args.splitlogo, args.splitlogoregion = parse_logo_info(
-            parser, args, args.split_at, "--split-at", args.split_at_by_default)
+            parser, args, args.split_at, "--split-at", args.split_at_by_default,
+            get_imagesize)
 
 
-def handle_stop_at(parser: argparse.ArgumentParser, args: argparse.Namespace):
+def handle_stop_at(parser: argparse.ArgumentParser, args: argparse.Namespace,
+                   get_imagesize: callable):
     args.stop_at_by_default = not args.stop_at
     if args.stop_at_by_default:
         args.stop_at = "ll:stoplogo.png"
     args.stoplogo, args.stoplogoregion = parse_logo_info(
-            parser, args, args.stop_at, "--stop-at", args.stop_at_by_default)
+            parser, args, args.stop_at, "--stop-at", args.stop_at_by_default,
+            get_imagesize)
 
 
 def handle_toc(parser: argparse.ArgumentParser, args: argparse.Namespace):
@@ -94,7 +98,8 @@ def handle_toc(parser: argparse.ArgumentParser, args: argparse.Namespace):
 
 
 def parse_logo_info(argparser: argparse.ArgumentParser, args: argparse.Namespace,
-                    logoinfo: str, optname: str, by_default: bool
+                    logoinfo: str, optname: str, by_default: bool,
+                    get_imagesize: callable
                    ) -> tg.Tuple[str,dict]:
     """
     logoinfo is the value of option --split-at or --stop-at (optname).
@@ -135,8 +140,7 @@ def parse_logo_info(argparser: argparse.ArgumentParser, args: argparse.Namespace
                       ymin=int(mm.group(3)), ymax=int(mm.group(4)))
         return (logofile, region)
     #----- compute region from ul, ur, ll, lr:
-    from pmlv.ffmpeg import imagesize
-    logowidth, logoheight = imagesize(logofile)
+    logowidth, logoheight = get_imagesize(logofile_as_found)
     width_tol, height_tol = (int(logowidth/2), int(logoheight/2))  # search tolerance
     region = dict()
     if logoregion[0] == 'u':  # upper

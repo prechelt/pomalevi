@@ -53,6 +53,25 @@ def make_pgm_logo(logofile: str, outputdir: str) -> str:
     return pgmfile
 
 
+def get_imagesize(imgfile: str) -> tg.Tuple[int,int]:
+    """Returns (width, height) of image in imgfile. TODO: simplify!"""
+    cmd = f"{ffprobe_cmd} -i {imgfile}"
+    p = ffx_popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+    for line in p.stderr:
+        pass  # keep only the last line
+    p.wait()
+    # p prints a final line such as these:
+    #     Stream #0:0: Video: pgm, gray, 122x105, 25 tbr, 25 tbn, 25 tbc
+    #     Stream #0:0: Video: png, rgba(pc), 122x105 [SAR 4724:4724 DAR 122:105], 25 tbr, 25 tbn, 25 tbc
+    # so we look for '123x456'-like things:
+    pattern = r"(\d+)x(\d+)"
+    mm = re.search(pattern, line)
+    if mm:
+        return (int(mm.group(1)), int(mm.group(2)))
+    else:
+        print(f"Cannot parse output of '{cmd}':\n", line)
+
+
 def get_videoresolution(file: str) -> tuple[int, int]:
     """Return (width, height) in pixels. http://trac.ffmpeg.org/wiki/FFprobeTips#WidthxHeightresolution"""
     opts = "-v error -select_streams v:0 -show_entries stream=width,height -of csv=nk=0:p=0"
@@ -187,22 +206,3 @@ def ffx_run(cmd: str) -> subprocess.CompletedProcess:
     """Run ffmpeg cmd with output suppressed."""
     base.trace(cmd)
     return subprocess.run(cmd, capture_output=True, check=True, shell=True)
-
-
-def imagesize(imgfile: str) -> tg.Tuple[int,int]:
-    """Returns (width, height) of image in imgfile. TODO: simplify!"""
-    cmd = f"{ffprobe_cmd} -i {imgfile}"
-    p = ffx_popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
-    for line in p.stderr:
-        pass  # keep only the last line
-    p.wait()
-    # p prints a final line such as these:
-    #     Stream #0:0: Video: pgm, gray, 122x105, 25 tbr, 25 tbn, 25 tbc
-    #     Stream #0:0: Video: png, rgba(pc), 122x105 [SAR 4724:4724 DAR 122:105], 25 tbr, 25 tbn, 25 tbc
-    # so we look for '123x456'-like things:
-    pattern = r"(\d+)x(\d+)"
-    mm = re.search(pattern, line)
-    if mm:
-        return (int(mm.group(1)), int(mm.group(2)))
-    else:
-        print(f"Cannot parse output of '{cmd}':\n", line)
