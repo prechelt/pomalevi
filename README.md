@@ -1,6 +1,10 @@
 # pomalevi
 
-PowerPoint-based maintainable lecture videos tool
+PowerPoint-based maintainable lecture videos command-line tool
+
+Simple and effective.
+
+If you are afraid of using the command-line, this is not for you.
 
 
 ## What `pomalevi` is
@@ -17,9 +21,9 @@ pomalevi converts such a video file (or any other) as follows:
   by applying more reasonable compression settings
 - it can split the video into parts (separate, shorter videos) based on 
   when a user-defined `splitlogo` appears in the video
-- it produces a simple HTML page with table of content hyperlinks for these
-  parts based on a trivial text file containing parts descriptions
-- it provides a very simple HTML player that will stop the video
+- it produces an HTML page with table of content hyperlinks for these
+  parts based on a very simple text file containing parts descriptions
+- it provides a simple HTML player that will stop the video
   when a user-defined `stoplogo` appears in the video,
   so that the audience can ponder a question.
 
@@ -66,32 +70,44 @@ the bigger part of which is needed by the Powerpoint video export.
 
 ## How to install `pomalevi`
 
-This is so far a crude and minimal solution, 
-with no readthedocs documentation,
-no release process, 
-and no pip package. 
+pomalevi is tested on Windows, but should also work on WSL or Linux proper.
+It is a command-line application, so you need to work in cmd.exe or 
+Powershell.
 
-Requirements:
-- `git` (for "installing" only)
-- [ffmpeg](http://ffmpeg.org/) 4.3 (must be in the PATH)
-- [Python 3](https://www.python.org/)
-- I strongly recommend running pomalevi on 
-  [WSL or WSL 2](https://docs.microsoft.com/en-us/windows/wsl/about) and
-  below will assume you do so.  
-  Running it directly on Windows is possible, but a bit more hassle
-  (which you will have to figure out yourself).  
-  The relevant differences are the lack of shebang lines
-  (so you'll have to start it with `python -m pomalevi`
-  instead of simply `pomalevy.py`), possible filename/backslash issues,
-  and possible differences regarding `ffmpeg`; I have made no attempt
-  (yet) to sort this out.
-  Suitable pull requests are welcome.
+- Install a recent version of Python (3.8 or higher) from
+  https://python.org.  
+  Commands `python` and `pip` must end up on your `PATH`.
+- Start cmd.exe or powershell and perform `pip install pomalevi`
+- That's all!  
+  You should now be able to call `pomalevi`.
 
-To "install", 
-- just clone the Github repo into a place of your choice:  
- `git clone https://github.com/prechelt/pomalevi.git`
-- Put the path to `pomalevi.py` into your PATH or provide the
-  path on each commandline (or make an alias).
+Caveats:
+- The above should work on personal computers.  
+  If you have a pre-installed version of Python but are not allowed to use
+ `pip` as shown (you should be!),
+  - use `pip install --user pomalevi` instead to install to your
+    personal directory instead
+  - use `pip show pomalevi` to see (in the "Location:" entry) 
+    where it ended up, e.g.
+    `c:\Users\<name>\AppData\Roaming\Python\Python310\site-packages`
+  - put the neighboring `Scripts` directory in your `Path`, e.g.
+    `c:\Users\<name>\AppData\Roaming\Python\Scripts`.  
+    (To modify `Path`, use the Windows key, search for "environment"`,
+    and call "Edit environment variables for your account" (not "for system").
+    If your Windows is not running in English, the name will be different,
+    but the English search term should still work.)
+  Pomalevi should now work like after the original procedure.  
+  Alternatively, you could perform an additional install of Python
+  in "for me only" fashion and use the pip of that.
+- The above installation procedure is a shortcut: If used, pomalevi
+  could _in principle_ interfere with other Python packages installed on your
+  machine (although that is unlikely to be a problem).  
+  A cleaner way would use `pipx` instead of `pip`, which installs a
+  package in an isolated environment.
+  To do that, 
+  - first install `pipx` by `pip install pipx`
+  - then install pomalevi by `pipx install pomalevi`
+  - and then put the path displayed by `pipx` into your `PATH`
 
 
 ## How to use `pomalevi`
@@ -99,21 +115,28 @@ To "install",
 
 ### View demo.pptx (1 minute)
 
-Go to the pomalevi install directoy tree,
-open `demo/demo.pptx` with Powerpoint,
-open "Powerpoint⟶Slide Show",
-select "Play Narrations" and "Use Timings",
-start the slide show.
+Find the pomalevi install directory tree in the
+directory ending in `site-packages` which is shown when you execute 
+`python -c "import sys; print(sys.path)"`.
 
-You can now "File⟶Save as" this file,
+From the pomalevi install directory tree,
+copy `ppt/demo.pptx` to any of your own directories.  
+Open the copy with Powerpoint,  
+choose "Powerpoint⟶Slide Show",  
+check the boxes for "Play Narrations" and "Use Timings",  
+start the slide show.  
+View it, end it. Imagine this was your own presentation which you want
+to publish as several videos in pomalevi style.
+
+To do that, "File⟶Save as" this file,
 select file format "Windows Media Video (*.wmv)",
-and so create a `demo.wmv` file with you can use as the
-`myslides.wmv` in the subsequent examples.
+and save it as `myslides.wmv`.
+This file you can use as the `myslides.wmv` in the subsequent examples.
 
 
 ### Very basic use: Compression only
 
-`pomalevi.py mydir/myslides.wmv`
+`pomalevi mydir/myslides.wmv`
 
 The output is a directory `mydir/myslides/` with several files.
 You can either use `mydir/myslides/index.html` 
@@ -146,10 +169,10 @@ just the video itself: `mydir/myslides/v1.mp4`.
   <img src="img/stoplogo.png" alt="Example pomalevi stop logo">
 - pomalevi makes a pixel-by-pixel search for this image and expects
   a match of at least 80%, so beware of non-rectangular or transparent logos
-  if the slide background is not always the same.
+  if the slide background behind it will not always be the same.
   See also section "Caveats" below.
 - Now produce the video with pomalevi:  
-  `pomalevi.py --stop-at ll:stoplogo.png mydir/myslides.wmv`  
+  `pomalevi --stop-at ll:stoplogo.png mydir/myslides.wmv`  
   (`ll` stands for **"lower left"**)
 - Searching for a stoplogo is a slooow process if done over the whole image.
   Therefore, pomalevi expects the logo to be in one of the four corners
@@ -187,12 +210,12 @@ The output of pomalevi appears a bit silly unless you let pomalevi
 split your video into several parts.
 
 - Splitting works **much the same as stopping** (described above):  
-  Decide on a logo (of course not the same as for stopping),  
-  insert it in your presentation (say, in the lower right),  
+  Decide on a logo (of course not the same one as for stopping),  
+  insert it in your presentation (preferably again in the lower right),  
   make a screenshot of it in the original size,  
-  store it as `splitlogo.png` or so,  
-  call pomalevi with it:  
-  `pomalevi.py --split-at ll:splitlogo.png input.wmv outputdir`  
+  store it as (preferably) `splitlogo.png`, and  
+  call pomalevi with it:    
+  `pomalevi --split-at ll:splitlogo.png input.wmv`  
 - Splitting creates a separate video file for each part, called
   `v1.mp4`, `v2.mp4`, etc.
 - `mydir/myslides/index.html` provides navigation between those videos.
@@ -209,8 +232,9 @@ content of that video part and also get a meaningful title
 for the HTML page by using the `--toc filename` option (table of contents):
 
 The file given must be a UTF-8-encoded plain-text file
-with a paragraph structure (as for instance MS Windows' `notepad` editor
-can produce them).
+with a paragraph structure. 
+Use any text editor (for instance MS Windows' `notepad`)
+to produce them.
 Paragraphs are separated simply by an empty line.
 
 The first paragraph (paragraph 0) provides the title of the 
@@ -226,7 +250,7 @@ This is the description of video part 1. It is a longer one that
 takes multiple lines. Those lines will be rendered as a flowing
 paragraph of text on the HTML page.
 
-This is the description of video part 2.
+This is the description of the second video part, number 2.
 ```
 
 Like most pomalevi options, `--toc` has **friendly defaults**:
@@ -238,8 +262,24 @@ Like most pomalevi options, `--toc` has **friendly defaults**:
   - `mydir/toc/stoplogo.png`, in the `toc` subdirectory of the input file 
      directory.
 
-Taking all of the above together, the pomalevi call:  
-`pomalevi.py --split-at lr:splitlogo.png --stop-at ll:stoplogo.png --toc input-contents.txt input.wmv outputdir`
+
+### Output directory: `--out`
+
+So far, we have always used the **friendly default** to tell
+pomalevi where we want the output to end up:
+If the input file is `mydir/myslides.wmv`, the output will go to
+`mydir/myslides/*`.
+
+If you don't want this, specifiy a target directory with `--out`:  
+`pomalevi --out outputdir mydir/myslides.wmv`.
+
+
+### Friendly defaults rough summary
+
+Taking all of the above together, the explicit pomalevi call could be:  
+`pomalevi --split-at ll:splitlogo.png --stop-at ll:stoplogo.png --toc mydir/myslides-toc.txt --out mydir/myslides mydir/myslides.wmv`  
+but the following is equivalent, courtesy of the defaults:  
+`pomalevi mydir/myslides.wmv`
 
 
 ### Overlapping Powerpoint export and pomalevi: waiting
@@ -254,19 +294,35 @@ Taking all of the above together, the pomalevi call:
   and only then start the actual pomalevi work.
 
 
-### Output formats: MP4 vs. Webm
+### Encoding type and quality: `--format`
 
-pomalevi currently produces `*.mp4` video files.
+pomalevi can produce either 
+`*.mp4` video files 
+(encoded with H.264 video and AAC audio) or 
+`*.webm` video files
+(encoded with VP8 video and Opus audio).
 
-In the future, it will default to the more modern `*.webm`
-(this is also what for instance YouTube uses)
-and allow MP4 as an option.
+`webm` encoding currently uses rather naive settings and is not recommended.
+
+`mp4` encoding is available with four different sets of settings, called
+q1 to q4, that produce different quality levels and file sizes.  
+q1 creates the smallest files with the lowest audio and video quality,  
+q4 creates the largest files with the highest quality.
+
+These are selected using  
+`--format mp4q1`  
+`--format mp4q2`  
+`--format mp4q3`  
+`--format mp4q4`  
+`--format webm`
+
+`mp4q3` is the default.
 
 
-## How it works
+## How pomalevi works internally
 
-pomalevi uses ffmpeg's `find_rect` filter to find all frames
-that contain the respective logo PNG content.
+pomalevi uses [ffmpeg](https://ffmpeg.org)'s `find_rect` filter 
+to find all frames that contain the respective logo PNG content.
 It uses the time information of these frames to drive the splitting
 into parts and to feed the pomalevi player with the stop times
 for each part.
@@ -287,9 +343,9 @@ in the output directory during encoding (and then disappear again).
   visible, the old one shortly reappears for varying lengths of time from
   a single frame to several tenths of a second.  
   So I use "Save as" with target format WMV instead.
-  That's sort of silly (because WMV is the inferior format) but it works.
-- Because of how it works (see above), the search for stop logo or split logo
-  may fail if the background of the logo is not white.
+  That's sort of silly (because WMV is the inferior format) but at least it works.
+- Because of how pomalevi works (see above), the search for stop logo or split logo
+  may fail if the background of the logo is colored.
   There must be enough contrast between the logo color(s) and the
   background color when converted to grayscale.
 - Because of how it works (see above), the search for stop logo or split logo
@@ -303,18 +359,12 @@ in the output directory during encoding (and then disappear again).
 
 Improvements waiting to be made:
 
-- setuptools, static-ffmpeg, generate binary
 - make demo.ppt
-- command keywords `encode`, `compress`, `patch`.
-- webm, `--mp4`
-- smaller audio (by quality)
-- `patch`
-- `--ffmpeg` to submit encoding options
-- `compress`
+- command keywords `encode`, `compress`, `patch`, `get-logos`, `get-demo`.
+- `--ffmpeg-a`, `--ffmpeg-v` to submit encoding options
 - highlight current video in toc
 - make `pomalevi.css` mobile-ready
 - `--favicon file`: Name of a 32x32 pixel PNG file to be used as the favicon.
-- search for default `--toc` file `<basename>-toc.txt`  
 
 
 ## Versions
@@ -327,3 +377,9 @@ Improvements waiting to be made:
   - obtain actual video resolution
   - modularized internal structure
   - friendly defaults for `--split-at`, `--stop-at`, `--toc`, `--out`.
+- 0.9, 2022-04-29:
+  - use `static-ffmpeg` Python package, no longer the system's ffmpeg
+  - use Poetry build system and produce `pomalevi.exe`
+- 1.0, 2022-05-06
+  - add `--format`
+  - add `ppt/demo.pptx`
