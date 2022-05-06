@@ -6,13 +6,15 @@ import time
 
 import pytest
 
-def test_basic_functionality():
-    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as mydir:
+def test_encode():
+    with tempfile.TemporaryDirectory() as mypath:
+        mydir = os.path.basename(mypath)
+        print(f"tempdir: mypath={mypath} mydir={mydir}")
         pomdir = os.path.dirname(__file__) + "/.."  # one above 'test'
         #----- prepare files:
-        shutil.copytree("test/testdata", mydir, dirs_exist_ok=True)
-        shutil.copy("img/splitlogo.png", mydir)
-        shutil.copy("img/stoplogo.png", mydir)
+        shutil.copytree("test/testdata", mypath, dirs_exist_ok=True)
+        shutil.copy("img/splitlogo.png", mypath)
+        shutil.copy("img/stoplogo.png", mypath)
         #----- remember toc contents (must all be single-line):
         with open("test/testdata/mini-toc.txt", 'rt') as f:
             toc1_title = f.readline().rstrip()
@@ -27,17 +29,20 @@ def test_basic_functionality():
             assert f.readline().rstrip() == ""
             toc2_p2 = f.readline().rstrip()
         #----- run pomalevi with split and stop:
-        os.chdir(mydir)  # we work in the scratch directory
-        cmd = f"python {pomdir}/pomalevi.py mini.wmv"
+        # on Windows, working _in_ the tempdir leads to infinite recursion
+        # upon cleanup on Python 3.10: https://github.com/python/cpython/issues/74168
+        # So we work one level farther up:
+        os.chdir(f"{mypath}/..")
+        cmd = f"python {pomdir}/pmlv/main.py {mydir}/mini.wmv"
         os.system(cmd)
         #----- check outputdir:
-        assert os.path.exists("mini/index.html")
-        assert os.path.exists("mini/favicon.png")
-        assert os.path.exists("mini/pomalevi.css")
-        assert os.path.exists("mini/v1.mp4")
-        assert os.path.exists("mini/v2.mp4")
-        assert not os.path.exists("mini/v3.mp4")
-        with open("mini/index.html", 'rt') as f:
+        assert os.path.exists(f"{mydir}/mini/index.html")
+        assert os.path.exists(f"{mydir}/mini/favicon.png")
+        assert os.path.exists(f"{mydir}/mini/pomalevi.css")
+        assert os.path.exists(f"{mydir}/mini/v1.mp4")
+        assert os.path.exists(f"{mydir}/mini/v2.mp4")
+        assert not os.path.exists(f"{mydir}/mini/v3.mp4")
+        with open(f"{mydir}/mini/index.html", 'rt') as f:
             html = f.read()
             # print(html)
             print("matching '%s'" % toc1_title)
@@ -49,12 +54,9 @@ def test_basic_functionality():
             stoptimes = "pmlv_stoptimes = [[3.53], []]"
             print("matching '%s'" % stoptimes)
             assert html.find(stoptimes) > 0
-        v1_size = os.stat("mini/v1.mp4").st_size
-        v2_size = os.stat("mini/v2.mp4").st_size
-        assert 140000 < v1_size < 160000
-        assert 85000 < v2_size < 90000
-        #----- patch toc:
-        #----- check new toc:
-        #----- prepare cleanup on Windows:
-        # Windows fails when removing the tempdir, because we are in it:
-        os.chdir('..')
+        v1_size = os.stat(f"{mydir}/mini/v1.mp4").st_size
+        v2_size = os.stat(f"{mydir}/mini/v2.mp4").st_size
+        assert 125000 < v1_size < 145000
+        assert 70000 < v2_size < 90000
+        #----- patch toc:  will become a TODO
+        #----- check new toc:  will become a TODO
