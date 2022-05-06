@@ -2,7 +2,7 @@
 
 [tool.poetry]
 name = "pomalevi"
-version = "0.9"
+version = "1.0"
 description = "Powerpoint-based maintainable lecture videos"
 authors = ["Lutz Prechelt <prechelt@inf.fu-berlin.de>"]
 license = "MIT"
@@ -11,7 +11,7 @@ homepage = "https://github.com/prechelt/pomalevi/blob/main/README.md"
 repository = "https://github.com/prechelt/pomalevi"
 keywords = ["Powerpoint", "video editing", "video rendering", "video player"]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
     "Environment :: Web Environment",
     "Intended Audience :: End Users/Desktop",
