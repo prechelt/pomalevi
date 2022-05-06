@@ -22,8 +22,13 @@ ffprobe_cmd = "static_ffprobe"
 
 @attrs.define
 class Encoding:
-    # mp4: AAC params: https://trac.ffmpeg.org/wiki/Encode/AAC
-    # mp4: H.264 params: https://trac.ffmpeg.org/wiki/Encode/H.264
+    # mp4: https://trac.ffmpeg.org/wiki/Encode/AAC
+    #      https://trac.ffmpeg.org/wiki/Encode/H.264
+    # webm: http://ffmpeg.org/ffmpeg-all.html#libopus-1
+    #       http://ffmpeg.org/ffmpeg-all.html#libvpx
+    #       https://sites.google.com/a/webmproject.org/wiki/ffmpeg
+    #       https://trac.ffmpeg.org/wiki/Encode/VP9
+    #       https://mattgadient.com/x264-vs-x265-vs-vp8-vs-vp9-examples/
     suffix: str  # filename suffix
     flags_v: str  # ffmpeg video codec settings
     flags_a: str  # ffmpeg audio codec settings
@@ -31,9 +36,21 @@ class Encoding:
 
 
 _encodings = dict(
-    mp4 = Encoding("mp4", 
-                   "-c:v libx264 -crf 23 -preset medium -tune stillimage", 
-                   "-c:a aac -b:a 64k -movflags +faststart"),
+    mp4q4 = Encoding("mp4", 
+            "-c:v libx264 -crf 22 -preset medium -tune stillimage", 
+            "-c:a aac -b:a 64k -movflags +faststart"),
+    mp4q3 = Encoding("mp4", 
+            "-c:v libx264 -crf 26 -preset medium -tune stillimage", 
+            "-c:a aac -b:a 56k -movflags +faststart"),
+    mp4q2 = Encoding("mp4", 
+            "-c:v libx264 -crf 30 -preset medium -tune stillimage", 
+            "-c:a aac -b:a 48k -movflags +faststart"),
+    mp4q1 = Encoding("mp4", 
+            "-c:v libx264 -crf 34 -preset medium -tune stillimage", 
+            "-c:a aac -b:a 40k -movflags +faststart"),
+    webm = Encoding("webm",
+            "-c:v libvpx -b:v 200k -quality good -speed 3",
+            "-c:a libopus -b:a 32k -cutoff 8000"),
 )
 
 
@@ -107,7 +124,9 @@ def find_rect(logopgmfile: str, region: dict, inputfile: str,
         result = [0.0] if add_start_and_end else []
         previous_quintasec = -1
         previous_is_match = False
+        f = ['frame', '0.0']
         for line in file:
+            # print(line)
             f = line.split(',')
             assert f[0] == "frame"
             quintasec = math.floor(float(f[1])/5.0) if f[1] else previous_quintasec
@@ -144,7 +163,7 @@ def encode_in_parts(inputfile: str, encoding: Encoding,
                     outputdir: str, splittimes: tg.List[float]):
     n = len(splittimes) - 1  # start does not count
     print("Encoding %d video part%s" % (n, "s" if n != 1 else ""))
-    for i in range(1, n+1):  # i in 1..n for building v{i].mp4
+    for i in range(1, n+1):  # i in 1..n for building v{i}.*
         from_to = f"-ss %.2f -to %.2f" % (splittimes[i-1], splittimes[i])
         outputfile = f"{outputdir}/v{i}.{encoding.suffix}"
         cmd = (f"{ffmpeg_cmd} -y {from_to} -i {inputfile} "
@@ -170,11 +189,11 @@ def encode_in_parts(inputfile: str, encoding: Encoding,
     print("Encoding DONE")
 
 
-def find_stops(numvideos: int, stoplogo: str, region: dict,
+def find_stops(numvideos: int, suffix: str, stoplogo: str, region: dict,
                outputdir: str) -> base.Stoptimes:
     result = []
-    for i in range(1, numvideos+1):  # i in 1..numvideos for scanning v{i].mp4
-        videofile = f"{outputdir}/v{i}.mp4"
+    for i in range(1, numvideos+1):  # i in 1..numvideos for scanning v{i}.*
+        videofile = f"{outputdir}/v{i}.{suffix}"
         stoptimes = find_rect(stoplogo, region, videofile) 
         result.append(stoptimes)
     return result

@@ -21,14 +21,17 @@ def process_args(get_videoresolution: callable, get_imagesize: callable):
                         help='CSS file to be copied to outputdir')
     parser.add_argument('--cssurl', type=str, metavar='http://.../mycss.css or mycss.css',
                         help='relative or absolute URL to CSS')
+    parser.add_argument('--format', type=str,
+                        choices=["mp4q4", "mp4q3", "mp4q2", "mp4q1", "webm"], default="mp4q3",
+                        help='default file type & quality: mp4q3')
+    parser.add_argument('--out', type=str, dest="outputdir", metavar="outputdir",
+                        help='directory to which output files will be written')
     parser.add_argument('--split-at', type=str, metavar='ll:splitlogo.png',
                         help='split when splitlogo appears in lower left corner (or lr, ul, ur)')
     parser.add_argument('--stop-at', type=str, metavar='ll:stoplogo.png',
                         help='stop when stoplogo appears in lower left corner (or lr, ul, ur)')
     parser.add_argument('--toc', type=str, metavar='inputfile-toc.txt',
                         help='content description: title, one paragraph per split part')
-    parser.add_argument('--out outputdir', type=str,
-                        help='directory to which output files will be written')
     parser.add_argument('inputfile', type=str,
                         help='video file to be processed (usually mp4 or wmv)')
     args = parser.parse_args()
@@ -58,9 +61,7 @@ def process_args(get_videoresolution: callable, get_imagesize: callable):
 
 
 def handle_out(parser: argparse.ArgumentParser, args: argparse.Namespace):
-    if hasattr(args, "out"):
-        args.outputdir = args.out
-    else:
+    if args.outputdir is None:
         args.outputdir = f"{args.inputdir}/{args.inputbasename}"
 
 

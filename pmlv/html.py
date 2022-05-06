@@ -31,7 +31,6 @@ html_template = """
     <video id="pomalevi-video" class="pmlv-video"
            height=540 controls
            data-setup='{ "playbackRates": [0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.4, 1.7, 2.0] }'>>
-       <!-- source src="v1.mp4" type="video/mp4" -->
        Your browser does not support the video tag.
     </video>
 
@@ -91,7 +90,7 @@ script_template = """
       }
 
       function pmlv_switch_to(i, play=true) {
-        pmlv_video.src = "v" + i + ".mp4"
+        pmlv_video.src = "v" + i + ".%(suffix)s"
         pmlv_video_idx = i  // select the relevant stoptimes
         pmlv_video.load()
         if (play) {
@@ -118,7 +117,7 @@ def read_toc(tocfile: str, numvideos: int) -> tg.Tuple[str, tg.List[str]]:
 
 def generate_html(title: str, 
                   cssfile: tg.Optional[str], cssurl: tg.Optional[str],
-                  stoptimes: Stoptimes, 
+                  stoptimes: Stoptimes, suffix: str,
                   toc: tg.List[str], outputdir: str):
     # https://html.spec.whatwg.org/multipage/media.html
     filename = f"{outputdir}/index.html"
@@ -139,7 +138,7 @@ def generate_html(title: str,
     css_block = f'    <link rel="stylesheet" href="{css_href}">'
     #----- prepare TOC:
     toc_rows = ""
-    script = script_template % dict(stoptimes=stoptimes)
+    script = script_template % dict(stoptimes=stoptimes, suffix=suffix)
     for i in range(1, len(stoptimes)+1):
         as_link = f"onclick='pmlv_switch_to({i})'"
         num_cell = f"{i}"
